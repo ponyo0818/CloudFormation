@@ -1,0 +1,65 @@
+aws cloudformation create-stack --stack-name role-ec2-stop-start-yfang  --template-body file://EC2StartStop.yaml --role-arn='arn:aws:iam::580893711503:role/aws-cfn-engineering-r' --capabilities CAPABILITY_NAMED_IAM
+
+
+#the role-arn is really saying to executed the cloudformation as the engineer-r role for iam service (AWS product) 580893711503
+
+IAM ARNs
+
+arn:partition:service:region:account:resource
+
+#
+When are CAPABILITIES_IAM/CAPABILITIES_NAMED_IAM Required
+
+According to CloudFormation CreateStack Parameters, one of these is required when your Template includes any of the following o:
+
+AWS::IAM::AccessKey
+AWS::IAM::Group
+AWS::IAM::InstanceProfile
+AWS::IAM::Policy
+AWS::IAM::Role
+AWS::IAM::User
+AWS::IAM::UserToGroupAddition 
+
+1
+
+You've added a resource of type AWS::IAM::Role to your resources section. This tells CloudFormation to create an IAM Role. In order to create IAM resources, you need to supply CAPABILITY_IAM or CAPABILITY_NAMED_IAM. It's an acknowledgement from you to CloudFormation that you understand that you are creating resources that can affect permissions in your AWS account.
+
+
+1. AssumeRolePolicyDocument
+
+AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 
+                - ec2.amazonaws.com
+            Action: 
+              - sts:AssumeRole
+
+The trust policy that is associated with this role. Trust policies define which entities can assume the role. You can associate only one trust policy with a role.
+    "Version": "2012-10-17"
+    his is the current version of the policy language, and you should always include a Version element and set it to 2012-10-17. Otherwise, you cannot use features such as policy variables that were introduced with this version.
+    
+    "Statement": [{...},{...},{...}]
+    The Statement element can contain a single statement or an array of individual statements. 
+
+2. policies
+
+Policies:
+        - PolicyName: stop-start-ec2
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:RunInstances
+                  - ec2:StopInstances
+                  - ec2:TerminateInstances
+                Resource: "*"
+
+Adds or updates an inline policy document that is embedded in the specified IAM role.
+
+# If you don't specify a stack name or ID in your statement, you must also grant the permission to use all resources for the action using the * wildcard for the Resource element.            
+    
+
